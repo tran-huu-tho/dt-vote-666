@@ -110,7 +110,7 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
   };
 
   return (
-    <div className="w-full max-w-2xl fade-in-up relative" style={{animationDelay: '0.2s'}}>
+    <div className="w-full max-w-lg mx-auto fade-in-up relative" style={{animationDelay: '0.2s'}}>
       {/* Toast Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {notifications.map((notif) => (
@@ -155,41 +155,41 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
         ))}
       </div>
 
-      <form onSubmit={handleDonate} className="glass-strong rounded-2xl p-8 gradient-border">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Quyên góp</h2>
-          <p className="text-sm text-white/50">Nhập số lượng CET bạn muốn quyên góp</p>
+      <form onSubmit={handleDonate} className="glass-strong rounded-xl p-6 gradient-border w-full">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-white mb-1">Quyên góp</h2>
+          <p className="text-sm text-white/60">Nhập số lượng CET bạn muốn quyên góp</p>
         </div>
         
-        <div className="mb-8">
-          <label className="block text-sm font-semibold text-white/70 mb-3">Số lượng CET</label>
-          <div className="relative group">
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-white/70 mb-2">Số lượng CET</label>
+          <div className="relative">
             <input
               type="number"
               step="0.001"
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Nhập số lượng"
+              placeholder="0.00"
               disabled={isLoading || !account}
-              className="w-full px-6 py-5 bg-black/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-black/40 disabled:opacity-50 disabled:cursor-not-allowed text-3xl font-bold text-white transition-all border-2 border-white/10 placeholder-white/20 hover:border-white/20"
+              className="w-full px-4 py-3 bg-white/5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-2xl font-semibold text-white transition-all border border-white/10 placeholder-white/30 hover:border-white/20"
             />
           </div>
         </div>
 
-        <div className="mb-8">
-          <p className="text-sm font-semibold text-white/70 mb-4">Chọn nhanh</p>
-          <div className="grid grid-cols-4 gap-3">
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-white/70 mb-3">Chọn nhanh</p>
+          <div className="grid grid-cols-4 gap-2">
             {quickAmounts.map((value) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => setAmount(value)}
                 disabled={isLoading || !account}
-                className={`px-4 py-3.5 rounded-xl text-base font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                   amount === value 
-                    ? 'bg-blue-600 text-white border-2 border-blue-400 shadow-lg shadow-blue-500/30' 
-                    : 'bg-white/5 text-white/70 border-2 border-white/10 hover:bg-white/10 hover:border-blue-400/50 hover:text-white'
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
                 }`}
               >
                 {value}
@@ -201,44 +201,36 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
         <button
           type="submit"
           disabled={isLoading || !account || !amount}
-          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-5 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-green-500/20 hover:shadow-2xl hover:shadow-green-500/30 text-lg relative overflow-hidden group"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-white/20 to-green-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
           {isLoading ? (
-            <span className="flex items-center justify-center gap-3 relative z-10">
-              <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
               </svg>
-              Đang xử lý giao dịch...
+              Đang xử lý...
             </span>
           ) : (
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>Quyên góp ngay</span>
-            </span>
+            <span>Quyên góp ngay</span>
           )}
         </button>
 
         {txHash && (
-          <div className="mt-6 p-5 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-2xl border-2 border-blue-500/40 scale-in backdrop-blur-sm">
-            <div className="flex items-start gap-3">
-              <div className="shrink-0">
-                <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
+          <div className="mt-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 scale-in">
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               <div className="flex-1">
-                <p className="text-sm text-blue-300 font-bold mb-2">
+                <p className="text-sm text-blue-300 font-semibold mb-1">
                   Giao dịch đã được gửi
                 </p>
                 <a
                   href={`https://testnet.coinex.net/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-mono text-blue-200 hover:text-white hover:underline break-all block bg-black/30 p-3 rounded-lg"
+                  className="text-xs font-mono text-blue-400 hover:text-blue-300 hover:underline break-all block"
                 >
                   {txHash}
                 </a>
@@ -248,12 +240,12 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
         )}
 
         {!account && (
-          <div className="mt-6 p-5 bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-2xl border-2 border-yellow-500/40 backdrop-blur-sm">
-            <div className="flex items-center justify-center gap-3">
-              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-4 p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <div className="flex items-center justify-center gap-2">
+              <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              <p className="text-sm text-yellow-200 font-semibold">
+              <p className="text-sm text-yellow-300 font-semibold">
                 Vui lòng kết nối ví để quyên góp
               </p>
             </div>

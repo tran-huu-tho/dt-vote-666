@@ -45,63 +45,54 @@ export default function Home() {
             <div className="flex items-center justify-between py-4">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center text-2xl font-black text-purple-900">
-                  DT
-                </div>
-                <div>
-                  <h1 className="text-2xl font-black text-yellow-400">DT VOTE 666</h1>
-                  <p className="text-xs text-white/50">Blockchain Donation</p>
-                </div>
+                <h1 className="text-xl font-bold text-white">DT VOTE 666</h1>
               </div>
 
-              {/* Navigation Tabs */}
-              <div className="hidden md:flex items-center gap-2">
+              {/* Navigation Links */}
+              <div className="hidden md:flex items-center gap-12">
                 <button
                   onClick={() => setActiveTab('home')}
-                  className={`px-6 py-2.5 rounded-lg font-bold transition-all ${
+                  className={`font-medium transition-colors ${
                     activeTab === 'home'
-                      ? 'bg-yellow-400 text-purple-900'
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                      ? 'text-white'
+                      : 'text-white/60 hover:text-white'
                   }`}
                 >
                   Trang chủ
                 </button>
                 <button
                   onClick={() => setActiveTab('history')}
-                  className={`px-6 py-2.5 rounded-lg font-bold transition-all ${
+                  className={`font-medium transition-colors ${
                     activeTab === 'history'
-                      ? 'bg-yellow-400 text-purple-900'
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                      ? 'text-white'
+                      : 'text-white/60 hover:text-white'
                   }`}
                 >
                   Lịch sử
                 </button>
                 <button
                   onClick={() => setActiveTab('top')}
-                  className={`px-6 py-2.5 rounded-lg font-bold transition-all ${
+                  className={`font-medium transition-colors ${
                     activeTab === 'top'
-                      ? 'bg-yellow-400 text-purple-900'
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                      ? 'text-white'
+                      : 'text-white/60 hover:text-white'
                   }`}
                 >
                   Top quyên góp
                 </button>
               </div>
 
-              {/* Wallet Info */}
+              {/* Wallet Info & Login Button */}
               <div className="flex items-center gap-3">
                 {account ? (
                   <>
-                    <div className="glass px-4 py-2 rounded-lg hidden lg:block">
-                      <p className="text-xs text-white/50 mb-1">Số dư của bạn</p>
-                      <p className="text-lg font-bold text-yellow-400">
-                        {parseFloat(balance).toFixed(4)} <span className="text-sm text-white/70">CET</span>
+                    <div className="hidden lg:block">
+                      <p className="text-sm text-white/60">
+                        Số dư: <span className="text-white font-semibold">{parseFloat(balance).toFixed(4)} CET</span>
                       </p>
                     </div>
-                    <div className="glass px-4 py-2.5 rounded-lg">
-                      <p className="text-sm font-mono text-white font-semibold">
-                        {account.slice(0, 6)}...{account.slice(-4)}
-                      </p>
+                    <div className="text-sm font-mono text-white/80">
+                      {account.slice(0, 6)}...{account.slice(-4)}
                     </div>
                   </>
                 ) : (
@@ -111,33 +102,33 @@ export default function Home() {
             </div>
 
             {/* Mobile Navigation */}
-            <div className="flex md:hidden gap-2 pb-3 overflow-x-auto">
+            <div className="flex md:hidden gap-8 pb-3 overflow-x-auto border-t border-white/10 pt-3">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
+                className={`font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'home'
-                    ? 'bg-yellow-400 text-purple-900'
-                    : 'text-white/70 hover:text-white glass'
+                    ? 'text-white'
+                    : 'text-white/60'
                 }`}
               >
                 Trang chủ
               </button>
               <button
                 onClick={() => setActiveTab('history')}
-                className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
+                className={`font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'history'
-                    ? 'bg-yellow-400 text-purple-900'
-                    : 'text-white/70 hover:text-white glass'
+                    ? 'text-white'
+                    : 'text-white/60'
                 }`}
               >
                 Lịch sử
               </button>
               <button
                 onClick={() => setActiveTab('top')}
-                className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
+                className={`font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'top'
-                    ? 'bg-yellow-400 text-purple-900'
-                    : 'text-white/70 hover:text-white glass'
+                    ? 'text-white'
+                    : 'text-white/60'
                 }`}
               >
                 Top quyên góp
@@ -151,27 +142,13 @@ export default function Home() {
           {activeTab === 'home' && (
             <div className="space-y-8 fade-in-up">
               {/* Hero Section */}
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl text-white font-bold mb-4">
-                  Quyên Góp Blockchain - Minh Bạch 100%
+              <div className="text-center mb-8">
+                <h2 className="text-3xl md:text-4xl text-white font-bold mb-3">
+                  Quyên Góp Blockchain
                 </h2>
-                <p className="text-white/70 max-w-2xl mx-auto mb-8">
-                  Sử dụng công nghệ blockchain để đảm bảo tính minh bạch và công bằng. Kết quả được xác định bởi smart contract!
+                <p className="text-white/70 max-w-2xl mx-auto text-lg">
+                  Minh bạch, an toàn và nhanh chóng với công nghệ blockchain
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                  <div className="glass p-6 rounded-2xl text-center hover:scale-105 transition-transform">
-                    <h3 className="text-yellow-400 font-bold text-xl mb-2">Bảo mật cao</h3>
-                    <p className="text-white/70 text-sm">Smart contract kiểm chứng</p>
-                  </div>
-                  <div className="glass p-6 rounded-2xl text-center hover:scale-105 transition-transform">
-                    <h3 className="text-yellow-400 font-bold text-xl mb-2">Nhanh chóng</h3>
-                    <p className="text-white/70 text-sm">Kết quả tức thì</p>
-                  </div>
-                  <div className="glass p-6 rounded-2xl text-center hover:scale-105 transition-transform">
-                    <h3 className="text-yellow-400 font-bold text-xl mb-2">Minh bạch</h3>
-                    <p className="text-white/70 text-sm">Mọi giao dịch công khai</p>
-                  </div>
-                </div>
               </div>
 
               {/* Donation Form */}
@@ -186,9 +163,9 @@ export default function Home() {
 
           {activeTab === 'history' && (
             <div className="fade-in-up">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">Lịch sử quyên góp</h2>
-                <p className="text-white/70">Tất cả giao dịch quyên góp được ghi nhận trên blockchain</p>
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">Lịch sử quyên góp</h2>
+                <p className="text-white/60">Tất cả giao dịch được ghi nhận trên blockchain</p>
               </div>
               <DonorsList refreshTrigger={refreshTrigger} />
             </div>
@@ -202,16 +179,16 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-20 pb-8">
+        <footer className="mt-16 pb-8">
           <div className="container mx-auto px-4">
-            <div className="glass-strong rounded-2xl p-6 max-w-4xl mx-auto text-center">
+            <div className="glass rounded-lg p-4 max-w-4xl mx-auto text-center">
               <p className="text-sm text-white/60">
                 Powered by{' '}
                 <a 
                   href="https://www.coinex.org/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-yellow-400 hover:text-yellow-300 font-semibold hover:underline"
+                  className="text-blue-400 hover:text-blue-300 font-semibold hover:underline"
                 >
                   CoinEx Smart Chain
                 </a>

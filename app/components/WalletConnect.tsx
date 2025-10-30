@@ -134,22 +134,37 @@ export default function WalletConnect({ onAccountChange }: WalletConnectProps) {
       setIsConnecting(true);
       
       // Kiểm tra và chuyển network trước
-      await checkNetwork();
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      if (chainId !== COINEX_TESTNET_CONFIG.chainId) {
-        await switchToCoinExTestnet();
+      try {
+        await checkNetwork();
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId !== COINEX_TESTNET_CONFIG.chainId) {
+          await switchToCoinExTestnet();
+        }
+      } catch (networkError: any) {
+        // User từ chối chuyển mạng
+        if (networkError.code === 4001) {
+          console.log('User rejected network switch');
+          setIsConnecting(false);
+          return;
+        }
       }
 
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts',
       });
 
-      await updateAccountInfo(accounts[0]);
+      if (accounts && accounts.length > 0) {
+        await updateAccountInfo(accounts[0]);
+      }
     } catch (error: any) {
-      console.error('Error connecting wallet:', error);
-      // Không hiển thị lỗi nếu user từ chối
-      if (error.code !== 4001) {
-        console.log('Wallet connection failed');
+      console.log('Connect wallet error:', error);
+      // User từ chối kết nối - không làm gì cả
+      if (error.code === 4001) {
+        console.log('User rejected connection');
+      } else if (error.code === -32002) {
+        console.log('Connection request already pending');
+      } else {
+        console.error('Wallet connection failed:', error.message);
       }
     } finally {
       setIsConnecting(false);
@@ -168,18 +183,18 @@ export default function WalletConnect({ onAccountChange }: WalletConnectProps) {
         <button
           onClick={connectWallet}
           disabled={isConnecting}
-          className="btn-gradient px-6 py-2.5 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
         >
-          {isConnecting ? 'Đang kết nối...' : 'Kết nối ví'}
+          {isConnecting ? 'ĐANG KẾT NỐI...' : 'KẾT NỐI VÍ'}
         </button>
       ) : (
         <>
           {!isCorrectNetwork && (
             <button
               onClick={switchToCoinExTestnet}
-              className="bg-yellow-500 hover:bg-yellow-600 text-purple-900 px-4 py-2 rounded-lg font-bold text-sm transition-all"
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded text-sm transition-all uppercase"
             >
-              Chuyển mạng
+              CHUYỂN MẠNG
             </button>
           )}
         </>

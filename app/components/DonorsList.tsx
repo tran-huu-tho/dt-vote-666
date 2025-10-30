@@ -157,14 +157,18 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
             <div className="overflow-hidden rounded-2xl glass border border-white/10">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead>
-                    <tr className="bg-white/5 border-b border-white/10">
+                  <thead className="sticky top-0 bg-linear-to-r from-purple-900/90 to-purple-800/90 backdrop-blur-sm z-10">
+                    <tr className="border-b border-white/10">
                       <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-20">STT</th>
                       <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider">Địa chỉ ví</th>
                       <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-48">Số tiền (CET)</th>
                       <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-56">Thời gian</th>
                     </tr>
                   </thead>
+                </table>
+              </div>
+              <div className="overflow-y-auto max-h-[600px] scrollbar-custom">
+                <table className="w-full">
                   <tbody>
                     {donors.map((donor, index) => (
                       <tr
