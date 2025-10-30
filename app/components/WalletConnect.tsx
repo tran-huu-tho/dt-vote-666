@@ -183,7 +183,7 @@ export default function WalletConnect({ onAccountChange }: WalletConnectProps) {
         <button
           onClick={connectWallet}
           disabled={isConnecting}
-          className="wallet-connect-btn px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
+          className="wallet-connect-btn px-4 sm:px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-xs sm:text-sm"
         >
           {isConnecting ? 'ĐANG KẾT NỐI...' : 'KẾT NỐI VÍ'}
         </button>
@@ -192,7 +192,7 @@ export default function WalletConnect({ onAccountChange }: WalletConnectProps) {
           {!isCorrectNetwork && (
             <button
               onClick={switchToCoinExTestnet}
-              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded text-sm transition-all uppercase"
+              className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded text-xs sm:text-sm transition-all uppercase"
             >
               CHUYỂN MẠNG
             </button>

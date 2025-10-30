@@ -162,14 +162,15 @@ body {
   color: rgba(107, 114, 128, 0.8) !important;
 }
 
-/* Wallet button for Light Theme */
-[data-theme="light"] .wallet-connect-btn {
-  background-color: #334155 !important;
+/* Wallet button for Light Theme - gray to white gradient */
+[data-theme="light"] button.bg-gray-700.text-white {
+  background: linear-gradient(135deg, #6b7280 0%, #d1d5db 100%) !important;
   color: #ffffff !important;
 }
 
-[data-theme="light"] .wallet-connect-btn:hover {
-  background-color: #1e293b !important;
+[data-theme="light"] button.bg-gray-700.text-white:hover {
+  background: linear-gradient(135deg, #6b7280 0%, #d1d5db 100%) !important;
+  color: #ffffff !important;
 }
 
 /* Table header text - MUST be white in both themes */

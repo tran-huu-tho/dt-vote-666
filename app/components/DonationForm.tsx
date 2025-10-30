@@ -110,15 +110,15 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto fade-in-up relative" style={{animationDelay: '0.2s'}}>
+    <div className="w-full max-w-lg mx-auto fade-in-up relative px-4 sm:px-0" style={{animationDelay: '0.2s'}}>
       {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 space-y-2">
         {notifications.map((notif) => (
           <div
             key={notif.id}
-            className={`${getNotificationColor(notif.type)} text-white px-6 py-4 rounded-xl shadow-2xl border-2 max-w-md scale-in flex items-start gap-3`}
+            className={`${getNotificationColor(notif.type)} text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl border-2 max-w-md scale-in flex items-start gap-2 sm:gap-3 text-sm sm:text-base`}
           >
-            <div className="flex-shrink-0 mt-0.5">
+            <div className="shrink-0 mt-0.5">
               {notif.type === 'success' && (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -145,7 +145,7 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
             </div>
             <button
               onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
-              className="flex-shrink-0 text-white/80 hover:text-white"
+              className="shrink-0 text-white/80 hover:text-white"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -155,14 +155,14 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
         ))}
       </div>
 
-      <form onSubmit={handleDonate} className="glass-strong rounded-xl p-6 gradient-border w-full">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-white mb-1">Quyên góp</h2>
-          <p className="text-sm text-white/60">Nhập số lượng CET bạn muốn quyên góp</p>
+      <form onSubmit={handleDonate} className="glass-strong rounded-xl p-4 sm:p-6 gradient-border w-full">
+        <div className="mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-1">Quyên góp</h2>
+          <p className="text-xs sm:text-sm text-white/60">Nhập số lượng CET bạn muốn quyên góp</p>
         </div>
         
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-white/70 mb-2">Số lượng CET</label>
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-xs sm:text-sm font-semibold text-white/70 mb-2">Số lượng CET</label>
           <div className="relative">
             <input
               type="number"
@@ -172,13 +172,13 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               disabled={isLoading || !account}
-              className="w-full px-4 py-3 bg-white/5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-2xl font-semibold text-white transition-all border border-white/10 placeholder-white/30 hover:border-white/20"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-xl sm:text-2xl font-semibold text-white transition-all border border-white/10 placeholder-white/30 hover:border-white/20"
             />
           </div>
         </div>
 
-        <div className="mb-6">
-          <p className="text-sm font-semibold text-white/70 mb-3">Chọn nhanh</p>
+        <div className="mb-4 sm:mb-6">
+          <p className="text-xs sm:text-sm font-semibold text-white/70 mb-2 sm:mb-3">Chọn nhanh</p>
           <div className="grid grid-cols-4 gap-2">
             {quickAmounts.map((value) => (
               <button
@@ -186,7 +186,7 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
                 type="button"
                 onClick={() => setAmount(value)}
                 disabled={isLoading || !account}
-                className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                   amount === value 
                     ? 'bg-blue-500 text-white' 
                     : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
@@ -201,7 +201,7 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
         <button
           type="submit"
           disabled={isLoading || !account || !amount}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 sm:py-3 text-sm sm:text-base rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">

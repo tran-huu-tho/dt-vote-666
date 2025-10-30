@@ -41,15 +41,15 @@ export default function Home() {
       <div className="min-h-screen relative z-10">
         {/* Top Navigation Bar */}
         <nav className="glass-strong border-b border-white/10">
-          <div className="container mx-auto px-8">
-            <div className="flex items-center justify-between py-4">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8">
+            <div className="flex items-center justify-between py-3 sm:py-4">
               {/* Logo */}
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold text-white">DT VOTE 666</h1>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <h1 className="text-lg sm:text-xl font-bold text-white">DT VOTE 666</h1>
               </div>
 
               {/* Navigation Links */}
-              <div className="hidden md:flex items-center gap-12">
+              <div className="hidden md:flex items-center gap-8 lg:gap-12">
                 <button
                   onClick={() => setActiveTab('home')}
                   className={`font-medium transition-all ${
@@ -83,15 +83,15 @@ export default function Home() {
               </div>
 
               {/* Wallet Info & Login Button */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {account ? (
                   <>
                     <div className="hidden lg:block">
-                      <p className="text-sm text-white/60">
+                      <p className="text-xs sm:text-sm text-white/60">
                         Số dư: <span className="text-white font-semibold">{parseFloat(balance).toFixed(4)} CET</span>
                       </p>
                     </div>
-                    <div className="text-sm font-mono text-white/80">
+                    <div className="text-xs sm:text-sm font-mono text-white/80">
                       {account.slice(0, 6)}...{account.slice(-4)}
                     </div>
                   </>
@@ -102,10 +102,10 @@ export default function Home() {
             </div>
 
             {/* Mobile Navigation */}
-            <div className="flex md:hidden gap-8 pb-3 overflow-x-auto border-t border-white/10 pt-3">
+            <div className="flex md:hidden gap-6 sm:gap-8 pb-3 overflow-x-auto border-t border-white/10 pt-3">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`font-medium whitespace-nowrap transition-colors ${
+                className={`font-medium whitespace-nowrap transition-colors text-sm sm:text-base ${
                   activeTab === 'home'
                     ? 'text-white'
                     : 'text-white/60'
@@ -115,7 +115,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab('history')}
-                className={`font-medium whitespace-nowrap transition-colors ${
+                className={`font-medium whitespace-nowrap transition-colors text-sm sm:text-base ${
                   activeTab === 'history'
                     ? 'text-white'
                     : 'text-white/60'
@@ -125,7 +125,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab('top')}
-                className={`font-medium whitespace-nowrap transition-colors ${
+                className={`font-medium whitespace-nowrap transition-colors text-sm sm:text-base ${
                   activeTab === 'top'
                     ? 'text-white'
                     : 'text-white/60'
@@ -137,16 +137,16 @@ export default function Home() {
           </div>
         </nav>
 
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
           {/* Tab Content */}
           {activeTab === 'home' && (
-            <div className="space-y-8 fade-in-up">
+            <div className="space-y-6 sm:space-y-8 fade-in-up">
               {/* Hero Section */}
-              <div className="text-center mb-8">
-                <h2 className="text-3xl md:text-4xl text-white font-bold mb-3">
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl text-white font-bold mb-2 sm:mb-3">
                   Quyên Góp Blockchain
                 </h2>
-                <p className="text-white/70 max-w-2xl mx-auto text-lg">
+                <p className="text-white/70 max-w-2xl mx-auto text-sm sm:text-base md:text-lg px-4">
                   Minh bạch, an toàn và nhanh chóng với công nghệ blockchain
                 </p>
               </div>
@@ -175,10 +175,10 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-16 pb-8">
+        <footer className="mt-12 sm:mt-16 pb-6 sm:pb-8">
           <div className="container mx-auto px-4">
-            <div className="glass rounded-lg p-4 max-w-4xl mx-auto text-center">
-              <p className="text-sm text-white/60">
+            <div className="glass rounded-lg p-3 sm:p-4 max-w-4xl mx-auto text-center">
+              <p className="text-xs sm:text-sm text-white/60">
                 Powered by{' '}
                 <a 
                   href="https://www.coinex.org/" 
