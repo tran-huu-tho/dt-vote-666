@@ -163,10 +163,6 @@ export default function Home() {
 
           {activeTab === 'history' && (
             <div className="fade-in-up">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Lịch sử quyên góp</h2>
-                <p className="text-white/60">Tất cả giao dịch được ghi nhận trên blockchain</p>
-              </div>
               <DonorsList refreshTrigger={refreshTrigger} />
             </div>
           )}

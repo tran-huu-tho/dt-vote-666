@@ -19,6 +19,8 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
   const [totalDonations, setTotalDonations] = useState<string>('0');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadDonors();
@@ -78,11 +80,22 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
     });
   };
 
+  // Tính toán pagination
+  const totalPages = Math.ceil(donors.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentDonors = donors.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto fade-in-up" style={{animationDelay: '0.4s'}}>
       <div className="glass-strong rounded-3xl overflow-hidden gradient-border">
         {/* Header */}
-        <div className="p-6 bg-white/5 border-b border-white/10">
+        <div className="p-6 bg-white/5 border-b border-white/10 text-center">
           <div>
             <div className="mb-2">
               <h2 className="text-2xl font-bold text-white">Danh sách quyên góp</h2>
@@ -154,57 +167,92 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
               <p className="text-white/50 text-sm">Hãy là người đầu tiên quyên góp!</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl glass border border-white/10">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="sticky top-0 bg-linear-to-r from-purple-900/90 to-purple-800/90 backdrop-blur-sm z-10">
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-20">STT</th>
-                      <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider">Địa chỉ ví</th>
-                      <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-48">Số tiền (CET)</th>
-                      <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-56">Thời gian</th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              <div className="overflow-y-auto max-h-[600px] scrollbar-custom">
-                <table className="w-full">
-                  <tbody>
-                    {donors.map((donor, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-white/5 hover:bg-white/5 transition-all"
-                      >
-                        <td className="py-4 px-6">
-                          <span className="inline-flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg text-sm font-bold">
-                            {index + 1}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6">
-                          <a
-                            href={`${COINEX_TESTNET_CONFIG.blockExplorerUrls[0]}/address/${donor.address}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-all break-all"
-                            title="Xem trên explorer"
-                          >
-                            {donor.address}
-                          </a>
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <span className="inline-block px-3 py-1.5 bg-green-600/20 border border-green-500/30 text-green-400 rounded-lg font-bold text-sm">
-                            {parseFloat(donor.amount).toFixed(4)}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-right text-sm text-white/60 font-semibold">
-                          {formatDate(donor.timestamp)}
-                        </td>
+            <>
+              <div className="overflow-hidden rounded-2xl glass border border-white/10">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-linear-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm">
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-20">STT</th>
+                        <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider">Địa chỉ ví</th>
+                        <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-48">Số tiền (CET)</th>
+                        <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-56">Thời gian</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {currentDonors.map((donor, index) => (
+                        <tr
+                          key={startIndex + index}
+                          className="border-b border-white/5 hover:bg-white/5 transition-all"
+                        >
+                          <td className="py-4 px-6">
+                            <span className="inline-flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg text-sm font-bold">
+                              {startIndex + index + 1}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <a
+                              href={`${COINEX_TESTNET_CONFIG.blockExplorerUrls[0]}/address/${donor.address}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-all break-all"
+                              title="Xem trên explorer"
+                            >
+                              {donor.address}
+                            </a>
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <span className="inline-block px-3 py-1.5 bg-green-600/20 border border-green-500/30 text-green-400 rounded-lg font-bold text-sm">
+                              {parseFloat(donor.amount).toFixed(4)}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-right text-sm text-white/60 font-semibold">
+                            {formatDate(donor.timestamp)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
+                  >
+                    ← Trước
+                  </button>
+                  
+                  <div className="flex gap-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          currentPage === page
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
+                  >
+                    Sau →
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
