@@ -173,10 +173,10 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
                   <table className="w-full">
                     <thead className="bg-linear-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm">
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-20">STT</th>
-                        <th className="text-left py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider">Địa chỉ ví</th>
-                        <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-48">Số tiền (CET)</th>
-                        <th className="text-right py-4 px-6 font-bold text-sm text-white/70 uppercase tracking-wider w-56">Thời gian</th>
+                        <th className="text-left py-4 px-6 font-bold text-sm uppercase tracking-wider w-20 text-white">STT</th>
+                        <th className="text-left py-4 px-6 font-bold text-sm uppercase tracking-wider text-white">Địa chỉ ví</th>
+                        <th className="text-right py-4 px-6 font-bold text-sm uppercase tracking-wider w-48 text-white">Số tiền (CET)</th>
+                        <th className="text-right py-4 px-6 font-bold text-sm uppercase tracking-wider w-56 text-white">Thời gian</th>
                       </tr>
                     </thead>
                     <tbody>

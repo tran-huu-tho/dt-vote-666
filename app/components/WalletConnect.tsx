@@ -183,7 +183,7 @@ export default function WalletConnect({ onAccountChange }: WalletConnectProps) {
         <button
           onClick={connectWallet}
           disabled={isConnecting}
-          className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
+          className="wallet-connect-btn px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
         >
           {isConnecting ? 'ĐANG KẾT NỐI...' : 'KẾT NỐI VÍ'}
         </button>

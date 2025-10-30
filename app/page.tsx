@@ -52,30 +52,30 @@ export default function Home() {
               <div className="hidden md:flex items-center gap-12">
                 <button
                   onClick={() => setActiveTab('home')}
-                  className={`font-medium transition-colors ${
+                  className={`font-medium transition-all ${
                     activeTab === 'home'
-                      ? 'text-white'
-                      : 'text-white/60 hover:text-white'
+                      ? 'bg-linear-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent'
+                      : 'text-white/60 hover:text-green-400'
                   }`}
                 >
                   Trang chủ
                 </button>
                 <button
                   onClick={() => setActiveTab('history')}
-                  className={`font-medium transition-colors ${
+                  className={`font-medium transition-all ${
                     activeTab === 'history'
-                      ? 'text-white'
-                      : 'text-white/60 hover:text-white'
+                      ? 'bg-linear-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent'
+                      : 'text-white/60 hover:text-green-400'
                   }`}
                 >
                   Lịch sử
                 </button>
                 <button
                   onClick={() => setActiveTab('top')}
-                  className={`font-medium transition-colors ${
+                  className={`font-medium transition-all ${
                     activeTab === 'top'
-                      ? 'text-white'
-                      : 'text-white/60 hover:text-white'
+                      ? 'bg-linear-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent'
+                      : 'text-white/60 hover:text-green-400'
                   }`}
                 >
                   Top quyên góp
