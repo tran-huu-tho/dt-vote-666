@@ -41,7 +41,7 @@ export default function Home() {
       <div className="min-h-screen relative z-10">
         {/* Top Navigation Bar */}
         <nav className="glass-strong border-b border-white/10">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-8">
             <div className="flex items-center justify-between py-4">
               {/* Logo */}
               <div className="flex items-center gap-3">
