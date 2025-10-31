@@ -61,9 +61,24 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-      // Gửi transaction thật lên blockchain
+      const amountInWei = ethers.parseEther(amount);
+      
+      // Kiểm tra số dư
+      const userBalance = await provider.getBalance(account);
+      const gasPrice = (await provider.getFeeData()).gasPrice || BigInt(0);
+      const estimatedGasCost = gasPrice * BigInt(150000); // Ước tính chi phí gas
+      const totalRequired = amountInWei + estimatedGasCost;
+      
+      if (userBalance < totalRequired) {
+        showNotification('error', 'Tài khoản không đủ để thực hiện giao dịch!');
+        setIsLoading(false);
+        return;
+      }
+
+      // Gửi transaction với gas limit cố định
       const tx = await contract.donate({
-        value: ethers.parseEther(amount),
+        value: amountInWei,
+        gasLimit: 150000,
       });
 
       setTxHash(tx.hash);
@@ -85,12 +100,18 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
         });
     } catch (error: any) {
       console.error('Error donating:', error);
-      if (error.code === 'ACTION_REJECTED') {
+      
+      // Xử lý các loại lỗi cụ thể
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
         showNotification('error', 'Bạn đã từ chối giao dịch!');
-      } else if (error.code === 'INSUFFICIENT_FUNDS') {
-        showNotification('error', 'Số dư không đủ!');
+      } else if (error.code === 'INSUFFICIENT_FUNDS' || error.message?.includes('insufficient funds')) {
+        showNotification('error', 'Tài khoản không đủ để thực hiện giao dịch!');
+      } else if (error.code === -32603) {
+        showNotification('error', 'Tài khoản không đủ để thực hiện giao dịch!');
+      } else if (error.message?.includes('gas')) {
+        showNotification('error', 'Tài khoản không đủ để thực hiện giao dịch!');
       } else {
-        showNotification('error', error.message || 'Có lỗi xảy ra. Vui lòng thử lại!');
+        showNotification('error', 'Có lỗi xảy ra. Vui lòng thử lại!');
       }
     } finally {
       setIsLoading(false);
@@ -112,7 +133,7 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
   return (
     <div className="w-full max-w-lg mx-auto fade-in-up relative px-4 sm:px-0" style={{animationDelay: '0.2s'}}>
       {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 space-y-2">
+      <div className="fixed top-20 right-4 left-4 sm:left-auto z-50 space-y-2">
         {notifications.map((notif) => (
           <div
             key={notif.id}

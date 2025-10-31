@@ -20,14 +20,24 @@ export default function Home() {
     setBalance(newBalance);
   };
 
-  const handleDonationSuccess = () => {
+  const handleDonationSuccess = async () => {
     // Tăng trigger để làm mới danh sách người quyên góp
     setRefreshTrigger(prev => prev + 1);
     
-    // Cập nhật lại số dư ví
-    if (account && window.ethereum) {
-      window.ethereum.request({ method: 'eth_requestAccounts' });
-    }
+    // Đợi 2 giây để transaction được confirm rồi mới refresh balance
+    setTimeout(async () => {
+      if (account && window.ethereum) {
+        try {
+          const { ethers } = await import('ethers');
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const balance = await provider.getBalance(account);
+          const balanceInCET = ethers.formatEther(balance);
+          setBalance(balanceInCET);
+        } catch (error) {
+          console.error('Error refreshing balance:', error);
+        }
+      }
+    }, 2000);
   };
 
   return (
