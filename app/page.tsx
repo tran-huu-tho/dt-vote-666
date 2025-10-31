@@ -83,7 +83,7 @@ export default function Home() {
               </div>
 
               {/* Wallet Info & Login Button */}
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-3 sm:gap-4">
                 {account ? (
                   <>
                     <div className="hidden lg:block">
@@ -91,6 +91,7 @@ export default function Home() {
                         Số dư: <span className="text-white font-semibold">{parseFloat(balance).toFixed(4)} CET</span>
                       </p>
                     </div>
+                    <div className="hidden lg:block h-6 w-px bg-white/20"></div>
                     <div className="text-xs sm:text-sm font-mono text-white/80">
                       {account.slice(0, 6)}...{account.slice(-4)}
                     </div>
