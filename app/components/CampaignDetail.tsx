@@ -359,36 +359,36 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       {/* Modal */}
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
-          className="glass-strong rounded-2xl max-w-4xl w-full border border-white/20 max-h-[90vh] overflow-y-auto"
+          className="glass-strong rounded-xl sm:rounded-2xl max-w-4xl w-full border border-white/20 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className={`p-6 border-b border-white/10 ${campaign.isActive ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+          <div className={`p-4 sm:p-6 border-b border-white/10 ${campaign.isActive ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className={`text-xs font-bold px-2 sm:px-3 py-1 rounded-full ${
                   campaign.isActive ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
                 }`}>
-                  {campaign.isActive ? 'Đang mở' : 'Đã đóng'}
+                  {campaign.isActive ? '🟢 Đang mở' : '🔴 Đã đóng'}
                 </span>
-                <span className="text-sm text-white/60">ID: {campaign.id}</span>
+                <span className="text-xs sm:text-sm text-white/60">ID: {campaign.id}</span>
               </div>
               <button
                 onClick={onClose}
-                className="text-white/60 hover:text-white transition-colors"
+                className="text-white/60 hover:text-white transition-colors shrink-0"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">{campaign.title}</h2>
-            <p className="text-white/70">{campaign.description}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{campaign.title}</h2>
+            <p className="text-sm sm:text-base text-white/70">{campaign.description}</p>
           </div>
 
           {/* Body */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Cột trái - Thống kê */}
               <div className="space-y-4">
                 {/* Tiến độ */}

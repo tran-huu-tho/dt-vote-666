@@ -303,11 +303,11 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
                           <table className="w-full min-w-[720px]">
                             <thead className="bg-white/5">
                               <tr className="border-b border-white/10">
-                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-20 text-white/70">STT</th>
-                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-32 text-white/70">Loại</th>
-                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider text-white/70">Địa chỉ ví</th>
-                                <th className="text-right py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-40 text-white/70">Số tiền (CET)</th>
-                                <th className="text-right py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-48 text-white/70">Thời gian</th>
+                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-20 text-white">STT</th>
+                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-32 text-white">Loại</th>
+                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider text-white">Địa chỉ ví</th>
+                                <th className="text-right py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-40 text-white">Số tiền (CET)</th>
+                                <th className="text-right py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-48 text-white">Thời gian</th>
                               </tr>
                             </thead>
                             <tbody>

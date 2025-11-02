@@ -197,17 +197,23 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
                 <div
                   key={donor.address}
                   className={`glass rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all hover:scale-102 ${
-                    index === 0 ? 'border-2 border-yellow-400/50' : ''
+                    index === 0 ? 'border-2 border-red-500/50' : 
+                    index === 1 ? 'border-2 border-green-500/50' : 
+                    index === 2 ? 'border-2 border-blue-500/50' : 
+                    index === 3 ? 'border-2 border-purple-500/50' :
+                    index === 4 ? 'border-2 border-yellow-400/50' : ''
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                     {/* Rank & Address */}
                     <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      <div className={`text-3xl sm:text-4xl font-black shrink-0 ${
-                        index === 0 ? 'text-yellow-400' : 
-                        index === 1 ? 'text-gray-300' : 
-                        index === 2 ? 'text-orange-400' : 
-                        'text-white/60'
+                      <div className={`text-3xl sm:text-4xl font-black shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
+                        index === 0 ? 'bg-red-500/20 text-red-500 border-2 border-red-500/50' : 
+                        index === 1 ? 'bg-green-500/20 text-green-500 border-2 border-green-500/50' : 
+                        index === 2 ? 'bg-blue-500/20 text-blue-500 border-2 border-blue-500/50' : 
+                        index === 3 ? 'bg-purple-500/20 text-purple-500 border-2 border-purple-500/50' :
+                        index === 4 ? 'bg-yellow-400/20 text-yellow-400 border-2 border-yellow-400/50' :
+                        'bg-white/10 text-white/60 border-2 border-white/20'
                       }`}>
                         {getMedalEmoji(index + 1)}
                       </div>
@@ -249,7 +255,7 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
                         
                         {/* Expandable campaign details */}
                         {expandedDonors.has(donor.address) && (
-                          <div className="mt-3 pt-3 border-t border-white/10">
+                          <div className="mt-3 pt-3 border-t border-white/10 dark:border-white/10">
                             <p className="text-xs text-white/50 mb-2 font-semibold">Chi tiết quyên góp:</p>
                             <div className="space-y-2">
                               {donor.campaignDonations.map((cd) => (
@@ -259,14 +265,14 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
                                 >
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <span className="px-1.5 py-0.5 bg-blue-500/30 text-blue-300 text-xs font-bold rounded">
+                                      <span className="px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded">
                                         #{cd.campaignId}
                                       </span>
                                       <span className="text-sm font-medium text-white truncate">
                                         {cd.campaignTitle}
                                       </span>
                                     </div>
-                                    <span className="text-xs text-white/50">
+                                    <span className="text-xs text-white">
                                       {cd.count} lượt
                                     </span>
                                   </div>
@@ -288,9 +294,11 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
                     <div className="text-left sm:text-right shrink-0 pl-10 sm:pl-0">
                       <p className="text-xs text-white/50 mb-1 font-semibold">Tổng quyên góp</p>
                       <div className={`text-2xl sm:text-3xl font-black ${
-                        index === 0 ? 'text-yellow-400' : 
-                        index === 1 ? 'text-gray-300' : 
-                        index === 2 ? 'text-orange-400' : 
+                        index === 0 ? 'text-red-500' : 
+                        index === 1 ? 'text-green-500' : 
+                        index === 2 ? 'text-blue-500' : 
+                        index === 3 ? 'text-purple-500' :
+                        index === 4 ? 'text-yellow-400' :
                         'text-blue-400'
                       }`}>
                         {parseFloat(donor.totalAmount).toFixed(4)}

@@ -145,12 +145,12 @@ export default function CampaignListSimple({ account, onSelectCampaign, refreshT
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {campaigns.map((campaign) => (
         <div
           key={campaign.id}
           onClick={() => onSelectCampaign(campaign)}
-          className="glass rounded-2xl overflow-hidden border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer group transform hover:scale-[1.02]"
+          className="glass rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer group transform hover:scale-[1.02]"
         >
           {/* Header */}
           <div className={`p-4 ${campaign.isActive ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
@@ -164,7 +164,7 @@ export default function CampaignListSimple({ account, onSelectCampaign, refreshT
               </span>
               <span className="text-xs text-white/60">#{campaign.id}</span>
             </div>
-            <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-2 min-h-14">
+            <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-2 min-h-[48px] sm:min-h-14">
               {campaign.title}
             </h3>
           </div>
