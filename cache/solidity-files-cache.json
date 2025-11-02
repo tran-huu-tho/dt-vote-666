@@ -36,6 +36,78 @@
       "artifacts": [
         "Donation"
       ]
+    },
+    "D:\\dt-vote-666\\contracts\\Donation.sol": {
+      "lastModificationDate": 1761722891714,
+      "contentHash": "daad7886054518cd246e3693a9395d2e",
+      "sourceName": "contracts/Donation.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Donation"
+      ]
+    },
+    "D:\\dt-vote-666\\contracts\\DonationCampaign.sol": {
+      "lastModificationDate": 1762066819409,
+      "contentHash": "840f5de6c5b88630aae4746fd2bdbbdb",
+      "sourceName": "contracts/DonationCampaign.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "DonationCampaign"
+      ]
     }
   }
 }

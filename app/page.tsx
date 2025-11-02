@@ -1,24 +1,88 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import WalletConnect from './components/WalletConnect';
 import DonationForm from './components/DonationForm';
 import DonorsList from './components/DonorsList';
 import TopDonors from './components/TopDonors';
+import CampaignListSimple from './components/CampaignListSimple';
+import CreateCampaignModal from './components/CreateCampaignModal';
+import CampaignDetail from './components/CampaignDetail';
 import ThemeToggle from './components/ThemeToggle';
 
 type TabType = 'home' | 'history' | 'top';
+
+interface Campaign {
+  id: number;
+  title: string;
+  description: string;
+  targetAmount: string;
+  totalRaised: string;
+  createdAt: number;
+  isActive: boolean;
+  creator: string;
+}
 
 export default function Home() {
   const [account, setAccount] = useState('');
   const [balance, setBalance] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Campaign states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+
+  const ADMIN_ADDRESS = '0xfedbd76caeb345e2d1ddac06c442b86638b65bca';
+  const isAdmin = account && account.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
 
   const handleAccountChange = (newAccount: string, newBalance: string) => {
     setAccount(newAccount);
     setBalance(newBalance);
   };
+
+  const handleDisconnect = async () => {
+    try {
+      // Revoke permissions - chỉ work với MetaMask version mới
+      if (window.ethereum?.request) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_revokePermissions",
+            params: [{ eth_accounts: {} }]
+          });
+        } catch (revokeError) {
+          // Nếu không support revoke, thử cách khác
+          console.log('Revoke not supported, using alternative method');
+        }
+      }
+      
+      // Clear state
+      setAccount('');
+      setBalance('');
+      setShowDropdown(false);
+      
+      // Reload page để reset hoàn toàn
+      window.location.reload();
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      // Vẫn reload để reset state
+      window.location.reload();
+    }
+  };
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleDonationSuccess = async () => {
     // Tăng trigger để làm mới danh sách người quyên góp
@@ -102,8 +166,37 @@ export default function Home() {
                       </p>
                     </div>
                     <div className="hidden lg:block h-6 w-px bg-white/20"></div>
-                    <div className="text-xs sm:text-sm font-mono text-white/80">
-                      {account.slice(0, 6)}...{account.slice(-4)}
+                    
+                    {/* Dropdown for wallet address */}
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        onClick={() => setShowDropdown(!showDropdown)}
+                        className="flex items-center gap-2 text-xs sm:text-sm font-mono text-white/80 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/5"
+                      >
+                        <span>{account.slice(0, 6)}...{account.slice(-4)}</span>
+                        <svg 
+                          className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {showDropdown && (
+                        <div className="absolute right-0 mt-2 w-48 glass rounded-lg shadow-xl border border-white/10 overflow-hidden z-50">
+                          <button
+                            onClick={handleDisconnect}
+                            className="w-full px-4 py-3 text-left text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Ngắt kết nối
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -162,13 +255,24 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Donation Form */}
-              <div className="w-full flex justify-center">
-                <DonationForm 
-                  account={account}
-                  onDonationSuccess={handleDonationSuccess}
-                />
-              </div>
+              {/* Nút tạo chiến dịch (chỉ admin) */}
+              {isAdmin && (
+                <div className="flex justify-center mb-6">
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-all shadow-lg hover:shadow-xl"
+                  >
+                    + Tạo chiến dịch mới
+                  </button>
+                </div>
+              )}
+
+              {/* Danh sách chiến dịch */}
+              <CampaignListSimple
+                account={account}
+                onSelectCampaign={(campaign: Campaign) => setSelectedCampaign(campaign)}
+                refreshTrigger={refreshTrigger}
+              />
             </div>
           )}
 
@@ -204,6 +308,30 @@ export default function Home() {
           </div>
         </footer>
       </div>
+
+      {/* Modal tạo chiến dịch */}
+      {isAdmin && (
+        <CreateCampaignModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setRefreshTrigger(prev => prev + 1);
+            setShowCreateModal(false);
+          }}
+          account={account}
+        />
+      )}
+
+      {/* Modal chi tiết chiến dịch */}
+      <CampaignDetail
+        campaign={selectedCampaign}
+        account={account}
+        onClose={() => setSelectedCampaign(null)}
+        onUpdate={() => {
+          setRefreshTrigger(prev => prev + 1);
+          setSelectedCampaign(null);
+        }}
+      />
     </>
   );
 }

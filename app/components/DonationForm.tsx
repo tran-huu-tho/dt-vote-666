@@ -34,6 +34,13 @@ export default function DonationForm({ account, onDonationSuccess }: DonationFor
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Kiểm tra trạng thái chiến dịch
+    const campaignActive = localStorage.getItem('campaignActive') !== 'false';
+    if (!campaignActive) {
+      showNotification('error', 'Chiến dịch quyên góp đã đóng. Vui lòng quay lại sau!');
+      return;
+    }
+
     if (!account) {
       showNotification('warning', 'Vui lòng kết nối ví trước!');
       return;
