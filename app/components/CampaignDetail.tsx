@@ -113,11 +113,19 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
         onUpdate();
       }, 2000);
 
-    } catch (error: unknown) {
-      console.error('Lỗi khi quyên góp:', error);
-      if (error instanceof Error && error.message.includes('user rejected')) {
+    } catch (error: any) {
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const errorCode = error?.code;
+      
+      if (errorCode === 'ACTION_REJECTED' || 
+          errorMessage.includes('user rejected') || 
+          errorMessage.includes('user denied') ||
+          errorMessage.includes('user cancelled')) {
+        // User cancelled - không log error
         showNotification('warning', 'Bạn đã hủy giao dịch');
       } else {
+        // Lỗi thật sự - mới log ra console
+        console.error('Lỗi khi quyên góp:', error);
         showNotification('error', 'Tài khoản không đủ để thực hiện giao dịch!');
       }
     } finally {
@@ -152,9 +160,19 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
         onUpdate();
       }, 2000);
 
-    } catch (error: unknown) {
-      console.error('Lỗi khi thay đổi trạng thái:', error);
-      showNotification('error', 'Lỗi khi thay đổi trạng thái chiến dịch!');
+    } catch (error: any) {
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const errorCode = error?.code;
+      
+      if (errorCode === 'ACTION_REJECTED' || 
+          errorMessage.includes('user rejected') || 
+          errorMessage.includes('user denied') ||
+          errorMessage.includes('user cancelled')) {
+        showNotification('warning', 'Bạn đã hủy giao dịch');
+      } else {
+        console.error('Lỗi khi thay đổi trạng thái:', error);
+        showNotification('error', 'Lỗi khi thay đổi trạng thái chiến dịch!');
+      }
     } finally {
       setIsTogglingStatus(false);
     }
@@ -187,11 +205,17 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
         onUpdate();
       }, 2000);
 
-    } catch (error: unknown) {
-      console.error('Lỗi khi rút tiền:', error);
-      if (error instanceof Error && error.message.includes('user rejected')) {
+    } catch (error: any) {
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const errorCode = error?.code;
+      
+      if (errorCode === 'ACTION_REJECTED' || 
+          errorMessage.includes('user rejected') || 
+          errorMessage.includes('user denied') ||
+          errorMessage.includes('user cancelled')) {
         showNotification('warning', 'Bạn đã hủy giao dịch');
       } else {
+        console.error('Lỗi khi rút tiền:', error);
         showNotification('error', 'Lỗi khi rút tiền từ chiến dịch!');
       }
     } finally {
@@ -234,11 +258,17 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
         onUpdate();
       }, 2000);
 
-    } catch (error: unknown) {
-      console.error('Lỗi khi xóa chiến dịch:', error);
-      if (error instanceof Error && error.message.includes('user rejected')) {
+    } catch (error: any) {
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const errorCode = error?.code;
+      
+      if (errorCode === 'ACTION_REJECTED' || 
+          errorMessage.includes('user rejected') || 
+          errorMessage.includes('user denied') ||
+          errorMessage.includes('user cancelled')) {
         showNotification('warning', 'Bạn đã hủy giao dịch');
       } else {
+        console.error('Lỗi khi xóa chiến dịch:', error);
         showNotification('error', 'Lỗi khi xóa chiến dịch!');
       }
     } finally {
@@ -366,7 +396,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
                       disabled={isDeleting || parseFloat(campaign.totalRaised) > 0}
                       className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isDeleting ? 'Đang xóa...' : '🗑️ Xóa chiến dịch'}
+                      {isDeleting ? 'Đang xóa...' : 'Xóa chiến dịch'}
                     </button>
                     
                     {parseFloat(campaign.totalRaised) > 0 && (
@@ -379,9 +409,10 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
               </div>
 
               {/* Cột phải - Form quyên góp */}
-              {!isAdmin && (
-                <div className="glass rounded-xl p-4 border border-white/10">
-                  <h3 className="text-sm font-bold text-white/60 mb-4">Quyên góp cho chiến dịch</h3>
+              <div className="glass rounded-xl p-4 border border-white/10">
+                <h3 className="text-sm font-bold text-white/60 mb-4">
+                  {isAdmin ? 'Quyên góp (Admin)' : 'Quyên góp cho chiến dịch'}
+                </h3>
                   
                   {campaign.isActive ? (
                     <div className="space-y-4">
@@ -435,7 +466,6 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
                     </div>
                   )}
                 </div>
-              )}
             </div>
           </div>
         </div>

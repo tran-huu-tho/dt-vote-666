@@ -102,18 +102,21 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess, accoun
         showNotification('error', 'Giao dịch thất bại. Vui lòng thử lại!');
       }
 
-    } catch (error: unknown) {
-      console.error('Lỗi khi tạo chiến dịch:', error);
-      if (error instanceof Error) {
-        if (error.message.includes('user rejected') || error.message.includes('User denied')) {
-          showNotification('warning', 'Bạn đã hủy giao dịch');
-        } else if (error.message.includes('insufficient funds')) {
-          showNotification('error', 'Không đủ CET để trả phí gas!');
-        } else {
-          showNotification('error', 'Lỗi RPC. Vui lòng thử lại sau vài giây!');
-        }
+    } catch (error: any) {
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const errorCode = error?.code;
+      
+      if (errorCode === 'ACTION_REJECTED' || 
+          errorMessage.includes('user rejected') || 
+          errorMessage.includes('user denied') ||
+          errorMessage.includes('user cancelled')) {
+        showNotification('warning', 'Bạn đã hủy giao dịch');
+      } else if (errorMessage.includes('insufficient funds')) {
+        console.error('Lỗi khi tạo chiến dịch:', error);
+        showNotification('error', 'Không đủ CET để trả phí gas!');
       } else {
-        showNotification('error', 'Lỗi khi tạo chiến dịch!');
+        console.error('Lỗi khi tạo chiến dịch:', error);
+        showNotification('error', 'Lỗi RPC. Vui lòng thử lại sau vài giây!');
       }
     } finally {
       setIsCreating(false);
