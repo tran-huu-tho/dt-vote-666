@@ -94,11 +94,13 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
             
             for (const event of events) {
               const block = await provider.getBlock(event.blockNumber);
+              // Type assertion để TypeScript nhận diện args
+              const eventLog = event as any;
               transactions.push({
                 type: 'withdrawal',
-                address: event.args?.admin || '',
-                campaignId: Number(event.args?.campaignId || i),
-                amount: ethers.formatEther(event.args?.amount || 0),
+                address: eventLog.args?.admin || '',
+                campaignId: Number(eventLog.args?.campaignId || i),
+                amount: ethers.formatEther(eventLog.args?.amount || 0),
                 timestamp: block?.timestamp || 0,
               });
             }
