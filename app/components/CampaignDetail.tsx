@@ -37,6 +37,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
   const [isDeleting, setIsDeleting] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [campaignBalance, setCampaignBalance] = useState('0');
+  const [balanceRefreshTrigger, setBalanceRefreshTrigger] = useState(0);
 
   const ADMIN_ADDRESS = '0xfedbd76caeb345e2d1ddac06c442b86638b65bca';
   const isAdmin = account && account.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
@@ -49,24 +50,27 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
     }, 5000);
   };
 
-  useEffect(() => {
-    const loadCampaignBalance = async () => {
-      if (!campaign) return;
+  const loadCampaignBalance = async () => {
+    if (!campaign) return;
+    
+    try {
+      console.log('🔄 [Balance] Đang tải số dư cho campaign #', campaign.id);
+      const { ethers } = await import('ethers');
+      const provider = new ethers.JsonRpcProvider('https://testnet-rpc.coinex.net');
+      const contract = new ethers.Contract(CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI, provider);
       
-      try {
-        const { ethers } = await import('ethers');
-        const provider = new ethers.JsonRpcProvider('https://testnet-rpc.coinex.net');
-        const contract = new ethers.Contract(CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI, provider);
-        
-        const balance = await contract.campaignBalance(campaign.id);
-        setCampaignBalance(ethers.formatEther(balance));
-      } catch (error) {
-        console.error('Lỗi khi tải số dư:', error);
-      }
-    };
+      const balance = await contract.campaignBalance(campaign.id);
+      const balanceFormatted = ethers.formatEther(balance);
+      console.log('✅ [Balance] Số dư mới:', balanceFormatted, 'CET');
+      setCampaignBalance(balanceFormatted);
+    } catch (error) {
+      console.error('❌ [Balance] Lỗi khi tải số dư:', error);
+    }
+  };
 
+  useEffect(() => {
     loadCampaignBalance();
-  }, [campaign]);
+  }, [campaign, balanceRefreshTrigger]);
 
   const getNotificationColor = (type: NotificationType) => {
     switch (type) {
@@ -128,14 +132,13 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       showNotification('success', `Quyên góp ${donationAmount} CET thành công!`);
       setDonationAmount('');
       
-      // Cập nhật số dư ngay
-      const newBalance = parseFloat(campaignBalance) + parseFloat(donationAmount);
-      setCampaignBalance(newBalance.toString());
+      // Trigger reload số dư campaign ngay lập tức
+      setBalanceRefreshTrigger(prev => prev + 1);
       
-      // Đợi 2 giây rồi cập nhật toàn bộ
+      // Đợi 1 giây để blockchain update, rồi gọi onUpdate (sẽ refresh balance ví)
       setTimeout(() => {
         onUpdate();
-      }, 2000);
+      }, 1000);
 
     } catch (error: any) {
       const errorMessage = error?.message?.toLowerCase() || '';
@@ -224,18 +227,22 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI, signer);
 
+      const amountWithdrawn = campaignBalance; // Lưu lại số tiền trước khi rút
+      
       const tx = await contract.withdrawFunds(campaign.id);
       showNotification('info', 'Đang xử lý giao dịch...');
       const receipt = await tx.wait();
 
       const txHash = receipt.hash.slice(0, 10) + '...' + receipt.hash.slice(-8);
-      showNotification('success', `Đã rút ${campaignBalance} CET thành công! TX: ${txHash}`);
+      showNotification('success', `Đã rút ${amountWithdrawn} CET thành công! TX: ${txHash}`);
 
-      setCampaignBalance('0');
+      // Trigger reload số dư campaign ngay lập tức (sẽ về 0)
+      setBalanceRefreshTrigger(prev => prev + 1);
       
+      // Đợi 1 giây để blockchain update, rồi gọi onUpdate (sẽ refresh balance ví)
       setTimeout(() => {
         onUpdate();
-      }, 2000);
+      }, 1000);
 
     } catch (error: any) {
       const errorMessage = error?.message?.toLowerCase() || '';

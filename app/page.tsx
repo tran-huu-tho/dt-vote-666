@@ -327,8 +327,23 @@ export default function Home() {
         campaign={selectedCampaign}
         account={account}
         onClose={() => setSelectedCampaign(null)}
-        onUpdate={() => {
+        onUpdate={async () => {
           setRefreshTrigger(prev => prev + 1);
+          
+          // Refresh balance ngay lập tức
+          if (account && window.ethereum) {
+            try {
+              const { ethers } = await import('ethers');
+              const provider = new ethers.BrowserProvider(window.ethereum);
+              const balance = await provider.getBalance(account);
+              const balanceInCET = ethers.formatEther(balance);
+              setBalance(balanceInCET);
+              console.log('✅ [Balance] Đã cập nhật số dư ví:', balanceInCET, 'CET');
+            } catch (error) {
+              console.error('❌ [Balance] Lỗi khi refresh balance:', error);
+            }
+          }
+          
           setSelectedCampaign(null);
         }}
       />
