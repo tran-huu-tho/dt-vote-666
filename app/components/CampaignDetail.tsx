@@ -38,6 +38,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [campaignBalance, setCampaignBalance] = useState('0');
   const [balanceRefreshTrigger, setBalanceRefreshTrigger] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const ADMIN_ADDRESS = '0xfedbd76caeb345e2d1ddac06c442b86638b65bca';
   const isAdmin = account && account.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
@@ -267,7 +268,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
     if (!campaign) return;
 
     if (parseFloat(campaignBalance) > 0) {
@@ -275,12 +276,13 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       return;
     }
 
-    const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn xóa chiến dịch "${campaign.title}"?\n\nChiến dịch sẽ bị ẩn khỏi danh sách nhưng dữ liệu vẫn được lưu trên blockchain.`
-    );
+    setShowDeleteConfirm(true);
+  };
 
-    if (!confirmed) return;
-
+  const handleDeleteConfirm = async () => {
+    if (!campaign) return;
+    
+    setShowDeleteConfirm(false);
     setIsDeleting(true);
 
     try {
@@ -440,7 +442,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
                     </button>
 
                     <button
-                      onClick={handleDelete}
+                      onClick={handleDeleteClick}
                       disabled={isDeleting || parseFloat(campaignBalance) > 0}
                       className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -523,6 +525,43 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-60 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div
+            className="glass-strong rounded-2xl max-w-md w-full border border-red-500/30 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Bạn có chắc chắn muốn xóa chiến dịch "{campaign?.title}"?</h3>
+              <p className="text-white/60 text-sm">
+                Chiến dịch sẽ bị ẩn khỏi danh sách nhưng dữ liệu vẫn được lưu trên blockchain.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition-all"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-all"
+              >
+                Xác nhận xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
