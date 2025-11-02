@@ -2,12 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS, CONTRACT_ABI, COINEX_TESTNET_CONFIG } from '../utils/contract';
+import { CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI } from '../utils/campaign-contract';
+
+interface CampaignDonation {
+  campaignId: number;
+  campaignTitle: string;
+  amount: string;
+  count: number;
+}
 
 interface TopDonor {
   address: string;
   totalAmount: string;
   donationCount: number;
+  campaignDonations: CampaignDonation[]; // Chi tiết quyên góp theo từng campaign
 }
 
 interface TopDonorsProps {
@@ -18,55 +26,126 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
   const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [expandedDonors, setExpandedDonors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadTopDonors();
   }, [refreshTrigger]);
+
+  const toggleDonor = (address: string) => {
+    const newExpanded = new Set(expandedDonors);
+    if (newExpanded.has(address)) {
+      newExpanded.delete(address);
+    } else {
+      newExpanded.add(address);
+    }
+    setExpandedDonors(newExpanded);
+  };
 
   const loadTopDonors = async () => {
     try {
       setIsLoading(true);
       setError('');
 
-      const provider = new ethers.JsonRpcProvider(COINEX_TESTNET_CONFIG.rpcUrls[0]);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      const provider = new ethers.JsonRpcProvider('https://testnet-rpc.coinex.net');
+      const contract = new ethers.Contract(CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI, provider);
 
-      // Lấy danh sách tất cả người quyên góp
-      const donorsData = await contract.getAllDonors();
+      // Lấy tất cả donations từ tất cả campaigns
+      const campaignCounter = await contract.campaignCounter();
       
-      // Tạo map để gom nhóm theo địa chỉ
-      const donorMap = new Map<string, { totalAmount: bigint; count: number }>();
+      // Map để gom nhóm theo địa chỉ donor
+      const donorMap = new Map<string, { 
+        totalAmount: bigint; 
+        count: number;
+        campaignMap: Map<number, { title: string; amount: bigint; count: number }>;
+      }>();
 
-      donorsData.forEach((donor: any) => {
-        const address = donor.donorAddress;
-        const amount = donor.amount;
+      // Duyệt qua tất cả campaigns
+      for (let i = 1; i <= Number(campaignCounter); i++) {
+        try {
+          // Kiểm tra campaign có bị xóa không
+          const campaignData = await contract.getCampaign(i);
+          if (campaignData.isDeleted) continue;
 
-        if (donorMap.has(address)) {
-          const existing = donorMap.get(address)!;
-          donorMap.set(address, {
-            totalAmount: existing.totalAmount + amount,
-            count: existing.count + 1
+          const campaignTitle = campaignData.title;
+          const campaignId = Number(campaignData.id);
+
+          // Lấy tất cả donations của campaign này
+          const donations = await contract.getCampaignDonations(i);
+          
+          donations.forEach((donation: any) => {
+            const address = donation.donor.toLowerCase(); // Lowercase để tránh trùng lặp
+            const amount = donation.amount;
+
+            if (donorMap.has(address)) {
+              const existing = donorMap.get(address)!;
+              
+              // Cập nhật campaign map
+              if (existing.campaignMap.has(campaignId)) {
+                const campaignData = existing.campaignMap.get(campaignId)!;
+                existing.campaignMap.set(campaignId, {
+                  title: campaignTitle,
+                  amount: campaignData.amount + amount,
+                  count: campaignData.count + 1
+                });
+              } else {
+                existing.campaignMap.set(campaignId, {
+                  title: campaignTitle,
+                  amount: amount,
+                  count: 1
+                });
+              }
+
+              donorMap.set(address, {
+                totalAmount: existing.totalAmount + amount,
+                count: existing.count + 1,
+                campaignMap: existing.campaignMap
+              });
+            } else {
+              const campaignMap = new Map();
+              campaignMap.set(campaignId, {
+                title: campaignTitle,
+                amount: amount,
+                count: 1
+              });
+              
+              donorMap.set(address, {
+                totalAmount: amount,
+                count: 1,
+                campaignMap: campaignMap
+              });
+            }
           });
-        } else {
-          donorMap.set(address, {
-            totalAmount: amount,
-            count: 1
-          });
+        } catch (err) {
+          console.error(`Error loading donations for campaign ${i}:`, err);
         }
-      });
+      }
 
       // Chuyển map thành array và format
-      const topDonorsArray: TopDonor[] = Array.from(donorMap.entries()).map(([address, data]) => ({
-        address,
-        totalAmount: ethers.formatEther(data.totalAmount),
-        donationCount: data.count
-      }));
+      const topDonorsArray: TopDonor[] = Array.from(donorMap.entries()).map(([address, data]) => {
+        const campaignDonations: CampaignDonation[] = Array.from(data.campaignMap.entries()).map(([campaignId, campaignData]) => ({
+          campaignId,
+          campaignTitle: campaignData.title,
+          amount: ethers.formatEther(campaignData.amount),
+          count: campaignData.count
+        }));
 
-      // Sắp xếp theo tổng số tiền giảm dần và lấy top 5
+        // Sắp xếp campaigns theo số tiền giảm dần
+        campaignDonations.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+
+        return {
+          address,
+          totalAmount: ethers.formatEther(data.totalAmount),
+          donationCount: data.count,
+          campaignDonations
+        };
+      });
+
+      // Sắp xếp theo tổng số tiền giảm dần và lấy top 10
       topDonorsArray.sort((a, b) => parseFloat(b.totalAmount) - parseFloat(a.totalAmount));
-      const top5 = topDonorsArray.slice(0, 5);
+      const top10 = topDonorsArray.slice(0, 10);
 
-      setTopDonors(top5);
+      setTopDonors(top10);
     } catch (error: any) {
       console.error('Error loading top donors:', error);
       setError('Không thể tải dữ liệu top quyên góp');
@@ -90,8 +169,8 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
         {/* Header */}
         <div className="p-4 sm:p-6 bg-white/5 border-b border-white/10">
           <div className="text-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Top 5 Người Quyên Góp</h2>
-            <p className="text-xs sm:text-sm text-white/60">Bảng xếp hạng những người đóng góp nhiều nhất</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Top 10 Người Quyên Góp</h2>
+            <p className="text-xs sm:text-sm text-white/60">Bảng xếp hạng tổng hợp từ tất cả các chiến dịch</p>
           </div>
         </div>
 
@@ -137,7 +216,7 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-white/50 mb-1 font-semibold">Địa chỉ ví</p>
                         <a
-                          href={`${COINEX_TESTNET_CONFIG.blockExplorerUrls[0]}/address/${donor.address}`}
+                          href={`https://testnet.coinex.net/address/${donor.address}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-mono text-xs sm:text-sm font-bold text-blue-400 hover:text-blue-300 hover:underline transition-all break-all block"
@@ -145,9 +224,63 @@ export default function TopDonors({ refreshTrigger }: TopDonorsProps) {
                         >
                           {donor.address}
                         </a>
-                        <p className="text-xs text-white/50 mt-1">
-                          Số lần quyên góp: <span className="text-white/70 font-semibold">{donor.donationCount}</span>
-                        </p>
+                        <div className="flex flex-wrap gap-3 mt-2 text-xs items-center">
+                          <p className="text-white/50">
+                            <span className="text-white/70 font-semibold">{donor.donationCount}</span> lượt quyên góp
+                          </p>
+                          <span className="text-white/30">•</span>
+                          <button
+                            onClick={() => toggleDonor(donor.address)}
+                            className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 rounded-lg transition-all font-semibold"
+                          >
+                            <span>{donor.campaignDonations.length} chiến dịch</span>
+                            <svg
+                              className={`w-3.5 h-3.5 transition-transform ${
+                                expandedDonors.has(donor.address) ? 'rotate-180' : ''
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+                        
+                        {/* Expandable campaign details */}
+                        {expandedDonors.has(donor.address) && (
+                          <div className="mt-3 pt-3 border-t border-white/10">
+                            <p className="text-xs text-white/50 mb-2 font-semibold">Chi tiết quyên góp:</p>
+                            <div className="space-y-2">
+                              {donor.campaignDonations.map((cd) => (
+                                <div
+                                  key={cd.campaignId}
+                                  className="flex justify-between items-start gap-3 p-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="px-1.5 py-0.5 bg-blue-500/30 text-blue-300 text-xs font-bold rounded">
+                                        #{cd.campaignId}
+                                      </span>
+                                      <span className="text-sm font-medium text-white truncate">
+                                        {cd.campaignTitle}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-white/50">
+                                      {cd.count} lượt
+                                    </span>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <div className="text-sm font-bold text-green-400">
+                                      {parseFloat(cd.amount).toFixed(4)}
+                                    </div>
+                                    <div className="text-xs text-white/50">CET</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

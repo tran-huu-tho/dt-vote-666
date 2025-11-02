@@ -2,12 +2,36 @@
 
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS, CONTRACT_ABI, COINEX_TESTNET_CONFIG } from '../utils/contract';
+import { CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI } from '../utils/campaign-contract';
 
-interface Donor {
-  address: string;
+interface Donation {
+  donor: string;
+  campaignId: number;
   amount: string;
   timestamp: number;
+}
+
+interface Withdrawal {
+  admin: string;
+  campaignId: number;
+  amount: string;
+  timestamp: number;
+}
+
+interface Transaction {
+  type: 'donation' | 'withdrawal';
+  address: string;
+  campaignId: number;
+  amount: string;
+  timestamp: number;
+}
+
+interface Campaign {
+  id: number;
+  title: string;
+  totalRaised: string;
+  transactionCount: number;
+  transactions: Transaction[];
 }
 
 interface DonorsListProps {
@@ -15,55 +39,101 @@ interface DonorsListProps {
 }
 
 export default function DonorsList({ refreshTrigger }: DonorsListProps) {
-  const [donors, setDonors] = useState<Donor[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [totalDonations, setTotalDonations] = useState<string>('0');
+  const [totalDonationCount, setTotalDonationCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedCampaigns, setExpandedCampaigns] = useState<Set<number>>(new Set());
+  const [currentPages, setCurrentPages] = useState<{[key: number]: number}>({});
   const itemsPerPage = 10;
 
   useEffect(() => {
-    loadDonors();
+    loadCampaignsWithDonations();
   }, [refreshTrigger]);
 
-  const loadDonors = async () => {
+  const loadCampaignsWithDonations = async () => {
     try {
       setIsLoading(true);
       setError('');
 
-      const provider = new ethers.JsonRpcProvider(COINEX_TESTNET_CONFIG.rpcUrls[0]);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      const provider = new ethers.JsonRpcProvider('https://testnet-rpc.coinex.net');
+      const contract = new ethers.Contract(CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI, provider);
 
-      // Lấy tổng số tiền quyên góp
-      try {
-        const total = await contract.totalDonations();
-        const totalFormatted = ethers.formatEther(total);
-        setTotalDonations(totalFormatted);
-      } catch (err) {
-        console.error('Error reading totalDonations:', err);
-        setTotalDonations('0');
+      // Lấy số lượng chiến dịch
+      const campaignCounter = await contract.campaignCounter();
+      const campaignList: Campaign[] = [];
+      let totalAmount = BigInt(0);
+      let totalCount = 0;
+
+      for (let i = 1; i <= Number(campaignCounter); i++) {
+        try {
+          // Lấy thông tin campaign
+          const campaignData = await contract.getCampaign(i);
+          
+          // Bỏ qua campaign đã xóa
+          if (campaignData.isDeleted) continue;
+
+          // Lấy donations của campaign này
+          const donations = await contract.getCampaignDonations(i);
+          
+          const formattedDonations: Transaction[] = donations.map((donation: any) => ({
+            type: 'donation' as const,
+            address: donation.donor,
+            campaignId: Number(donation.campaignId),
+            amount: ethers.formatEther(donation.amount),
+            timestamp: Number(donation.timestamp),
+          }));
+
+          // Lấy withdrawals của campaign này từ events
+          const transactions: Transaction[] = [...formattedDonations];
+          
+          try {
+            const filter = contract.filters.FundsWithdrawn(i);
+            const events = await contract.queryFilter(filter);
+            
+            for (const event of events) {
+              const block = await provider.getBlock(event.blockNumber);
+              transactions.push({
+                type: 'withdrawal',
+                address: event.args?.admin || '',
+                campaignId: Number(event.args?.campaignId || i),
+                amount: ethers.formatEther(event.args?.amount || 0),
+                timestamp: block?.timestamp || 0,
+              });
+            }
+          } catch (err) {
+            console.error(`Error loading withdrawals for campaign ${i}:`, err);
+          }
+
+          // Sắp xếp tất cả transactions theo thời gian mới nhất
+          transactions.sort((a, b) => b.timestamp - a.timestamp);
+
+          campaignList.push({
+            id: Number(campaignData.id),
+            title: campaignData.title,
+            totalRaised: ethers.formatEther(campaignData.totalRaised),
+            transactionCount: transactions.length,
+            transactions: transactions,
+          });
+
+          totalAmount += campaignData.totalRaised;
+          totalCount += transactions.length;
+
+        } catch (err) {
+          console.error(`Error loading campaign ${i}:`, err);
+        }
       }
 
-      // Lấy danh sách người quyên góp
-      try {
-        const donorsData = await contract.getAllDonors();
-        
-        const formattedDonors = donorsData.map((donor: any) => ({
-          address: donor.donorAddress,
-          amount: ethers.formatEther(donor.amount),
-          timestamp: Number(donor.timestamp),
-        }));
+      // Sắp xếp campaigns theo số lượng transactions (nhiều nhất trước)
+      campaignList.sort((a, b) => b.transactionCount - a.transactionCount);
 
-        // Sắp xếp theo thời gian mới nhất
-        formattedDonors.sort((a: Donor, b: Donor) => b.timestamp - a.timestamp);
-        
-        setDonors(formattedDonors);
-      } catch (err) {
-        console.error('Error reading donors:', err);
-        setDonors([]);
-      }
+      setCampaigns(campaignList);
+      setTotalDonations(ethers.formatEther(totalAmount));
+      setTotalDonationCount(totalCount);
+
     } catch (error: any) {
-      console.error('Error loading donors:', error);
+      console.error('Error loading campaigns:', error);
       setError('Không thể kết nối với blockchain. Vui lòng kiểm tra mạng.');
     } finally {
       setIsLoading(false);
@@ -80,15 +150,34 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
     });
   };
 
-  // Tính toán pagination
-  const totalPages = Math.ceil(donors.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentDonors = donors.slice(startIndex, endIndex);
+  const toggleCampaign = (campaignId: number) => {
+    const newExpanded = new Set(expandedCampaigns);
+    if (newExpanded.has(campaignId)) {
+      newExpanded.delete(campaignId);
+    } else {
+      newExpanded.add(campaignId);
+      // Initialize page 1 for this campaign
+      if (!currentPages[campaignId]) {
+        setCurrentPages({ ...currentPages, [campaignId]: 1 });
+      }
+    }
+    setExpandedCampaigns(newExpanded);
+  };
 
-  const goToPage = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const goToPage = (campaignId: number, page: number) => {
+    setCurrentPages({ ...currentPages, [campaignId]: page });
+  };
+
+  const getPaginatedTransactions = (transactions: Transaction[], campaignId: number) => {
+    const page = currentPages[campaignId] || 1;
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return {
+      transactions: transactions.slice(startIndex, endIndex),
+      totalPages: Math.ceil(transactions.length / itemsPerPage),
+      currentPage: page,
+      startIndex,
+    };
   };
 
   return (
@@ -120,7 +209,7 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
               <p className="text-xs text-white/50 mb-1 sm:mb-2 font-semibold uppercase tracking-wider">Số lượt đóng góp</p>
               <div className="flex items-baseline gap-1 sm:gap-2">
                 <p className="text-2xl sm:text-3xl font-bold text-blue-400">
-                  {donors.length}
+                  {totalDonationCount}
                 </p>
                 <span className="text-base sm:text-lg font-semibold text-white/60">lượt</span>
               </div>
@@ -150,7 +239,7 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
                 </p>
               </div>
               <button
-                onClick={loadDonors}
+                onClick={loadCampaignsWithDonations}
                 className="mt-6 px-6 py-3 btn-gradient text-white rounded-xl font-bold transition-all hover-glow"
               >
                 Thử lại
@@ -161,98 +250,178 @@ export default function DonorsList({ refreshTrigger }: DonorsListProps) {
               <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-white/20 border-t-purple-500"></div>
               <p className="text-white mt-6 font-bold text-lg">Đang tải dữ liệu từ blockchain...</p>
             </div>
-          ) : donors.length === 0 ? (
+          ) : campaigns.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-white font-bold text-2xl mb-2">Chưa có ai quyên góp</p>
-              <p className="text-white/50 text-sm">Hãy là người đầu tiên quyên góp!</p>
+              <p className="text-white font-bold text-2xl mb-2">Chưa có chiến dịch nào</p>
+              <p className="text-white/50 text-sm">Chưa có dữ liệu quyên góp</p>
             </div>
           ) : (
-            <>
-              <div className="overflow-hidden rounded-xl sm:rounded-2xl glass border border-white/10">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[640px]">
-                    <thead className="bg-linear-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm">
-                      <tr className="border-b border-white/10">
-                        <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-xs sm:text-sm uppercase tracking-wider w-16 sm:w-20 text-white">STT</th>
-                        <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-xs sm:text-sm uppercase tracking-wider text-white">Địa chỉ ví</th>
-                        <th className="text-right py-3 sm:py-4 px-3 sm:px-6 font-bold text-xs sm:text-sm uppercase tracking-wider w-32 sm:w-48 text-white">Số tiền (CET)</th>
-                        <th className="text-right py-3 sm:py-4 px-3 sm:px-6 font-bold text-xs sm:text-sm uppercase tracking-wider w-40 sm:w-56 text-white">Thời gian</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentDonors.map((donor, index) => (
-                        <tr
-                          key={startIndex + index}
-                          className="border-b border-white/5 hover:bg-white/5 transition-all"
+            <div className="space-y-4">
+              {campaigns.map((campaign) => {
+                const isExpanded = expandedCampaigns.has(campaign.id);
+                const { transactions, totalPages, currentPage, startIndex} = getPaginatedTransactions(campaign.transactions, campaign.id);
+
+                return (
+                  <div key={campaign.id} className="glass rounded-xl border border-white/10 overflow-hidden">
+                    {/* Campaign Header - Clickable */}
+                    <button
+                      onClick={() => toggleCampaign(campaign.id)}
+                      className="w-full p-4 sm:p-6 bg-white/5 hover:bg-white/10 transition-all text-left flex items-center justify-between gap-4"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-xs font-bold px-2 py-1 bg-blue-500 text-white rounded">
+                            #{campaign.id}
+                          </span>
+                          <h3 className="text-lg sm:text-xl font-bold text-white">{campaign.title}</h3>
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-sm">
+                          <div className="text-white/60">
+                            <span className="font-semibold text-green-400">{parseFloat(campaign.totalRaised).toFixed(2)} CET</span> tổng quyên góp
+                          </div>
+                          <div className="text-white/60">
+                            <span className="font-semibold text-blue-400">{campaign.transactionCount}</span> giao dịch
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-white/40">
+                        <svg 
+                          className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
                         >
-                          <td className="py-3 sm:py-4 px-3 sm:px-6">
-                            <span className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-bold">
-                              {startIndex + index + 1}
-                            </span>
-                          </td>
-                          <td className="py-3 sm:py-4 px-3 sm:px-6">
-                            <a
-                              href={`${COINEX_TESTNET_CONFIG.blockExplorerUrls[0]}/address/${donor.address}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-mono text-xs sm:text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-all break-all"
-                              title="Xem trên explorer"
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+
+                    {/* Transactions Table - Expandable */}
+                    {isExpanded && campaign.transactions.length > 0 && (
+                      <div className="border-t border-white/10">
+                        <div className="overflow-x-auto">
+                          <table className="w-full min-w-[720px]">
+                            <thead className="bg-white/5">
+                              <tr className="border-b border-white/10">
+                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-20 text-white/70">STT</th>
+                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-32 text-white/70">Loại</th>
+                                <th className="text-left py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider text-white/70">Địa chỉ ví</th>
+                                <th className="text-right py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-40 text-white/70">Số tiền (CET)</th>
+                                <th className="text-right py-3 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider w-48 text-white/70">Thời gian</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {transactions.map((transaction, index) => (
+                                <tr
+                                  key={startIndex + index}
+                                  className="border-b border-white/5 hover:bg-white/5 transition-all"
+                                >
+                                  <td className="py-3 px-4 sm:px-6">
+                                    <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-lg text-xs font-bold">
+                                      {startIndex + index + 1}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 sm:px-6">
+                                    {transaction.type === 'donation' ? (
+                                      <span className="inline-block px-2 py-1 bg-green-600/20 border border-green-500/30 text-green-400 rounded text-xs font-bold">
+                                         Quyên góp
+                                      </span>
+                                    ) : (
+                                      <span className="inline-block px-2 py-1 bg-orange-600/20 border border-orange-500/30 text-orange-400 rounded text-xs font-bold">
+                                         Admin rút tiền
+
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 sm:px-6">
+                                    <a
+                                      href={`https://testnet.coinex.net/address/${transaction.address}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-mono text-xs font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-all break-all"
+                                      title="Xem trên explorer"
+                                    >
+                                      {transaction.address}
+                                    </a>
+                                  </td>
+                                  <td className="py-3 px-4 sm:px-6 text-right">
+                                    <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${
+                                      transaction.type === 'donation'
+                                        ? 'bg-green-600/20 border border-green-500/30 text-green-400'
+                                        : 'bg-red-600/20 border border-red-500/30 text-red-400'
+                                    }`}>
+                                      {transaction.type === 'donation' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(4)}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 sm:px-6 text-right text-xs text-white/60 font-semibold">
+                                    {formatDate(transaction.timestamp)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                          <div className="p-4 border-t border-white/5 flex items-center justify-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => goToPage(campaign.id, currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all text-xs"
                             >
-                              {donor.address}
-                            </a>
-                          </td>
-                          <td className="py-3 sm:py-4 px-3 sm:px-6 text-right">
-                            <span className="inline-block px-2 sm:px-3 py-1 sm:py-1.5 bg-green-600/20 border border-green-500/30 text-green-400 rounded-lg font-bold text-xs sm:text-sm">
-                              {parseFloat(donor.amount).toFixed(4)}
-                            </span>
-                          </td>
-                          <td className="py-3 sm:py-4 px-3 sm:px-6 text-right text-xs sm:text-sm text-white/60 font-semibold">
-                            {formatDate(donor.timestamp)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                              ← Trước
+                            </button>
+                            
+                            <div className="flex gap-1">
+                              {Array.from({ length: Math.min(totalPages, 4) }, (_, i) => {
+                                let page;
+                                if (totalPages <= 4) {
+                                  page = i + 1;
+                                } else if (currentPage <= 2) {
+                                  page = i + 1;
+                                } else if (currentPage >= totalPages - 1) {
+                                  page = totalPages - 3 + i;
+                                } else {
+                                  page = currentPage - 1 + i;
+                                }
+                                return (
+                                  <button
+                                    key={page}
+                                    onClick={() => goToPage(campaign.id, page)}
+                                    className={`px-3 py-2 rounded-lg font-semibold transition-all text-xs ${
+                                      currentPage === page
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                    }`}
+                                  >
+                                    {page}
+                                  </button>
+                                );
+                              })}
+                            </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-4 sm:mt-6 flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
-                  <button
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all text-xs sm:text-sm"
-                  >
-                    ← Trước
-                  </button>
-                  
-                  <div className="flex gap-1 sm:gap-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => goToPage(page)}
-                        className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition-all text-xs sm:text-sm ${
-                          currentPage === page
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-white/10 text-white/70 hover:bg-white/20'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                            <button
+                              onClick={() => goToPage(campaign.id, currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                              className="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all text-xs"
+                            >
+                              Sau →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {isExpanded && campaign.transactions.length === 0 && (
+                      <div className="p-8 text-center border-t border-white/10">
+                        <p className="text-white/60">Chưa có giao dịch nào cho chiến dịch này</p>
+                      </div>
+                    )}
                   </div>
-
-                  <button
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all text-xs sm:text-sm"
-                  >
-                    Sau →
-                  </button>
-                </div>
-              )}
-            </>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
