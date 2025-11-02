@@ -219,7 +219,7 @@ export default function CampaignListSimple({ account, onSelectCampaign, refreshT
                   : 'bg-white/10 text-white/40 cursor-not-allowed'
               }`}
             >
-              {isAdmin ? '⚙️ Quản lý' : (campaign.isActive ? '💝 Quyên góp ngay' : '🔒 Đã đóng')}
+              {isAdmin ? '⚙️ Quản lý' : (campaign.isActive ? ' Quyên góp ngay' : ' Đã đóng')}
             </button>
           </div>
         </div>

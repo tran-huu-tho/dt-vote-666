@@ -99,6 +99,11 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       return;
     }
 
+    if (!account) {
+      showNotification('error', 'Vui lòng kết nối ví MetaMask!');
+      return;
+    }
+
     setIsDonating(true);
 
     try {
@@ -457,7 +462,12 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
                   {isAdmin ? 'Quyên góp (Admin)' : 'Quyên góp cho chiến dịch'}
                 </h3>
                   
-                  {campaign.isActive ? (
+                  {!account ? (
+                    <div className="text-center py-8">
+                      <p className="text-white/60 mb-3">⚠️ Chưa kết nối ví</p>
+                      <p className="text-sm text-white/40">Vui lòng kết nối MetaMask để quyên góp</p>
+                    </div>
+                  ) : campaign.isActive ? (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-bold text-white mb-2">Số lượng CET</label>

@@ -82,7 +82,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess, accoun
         gasPrice: gasPrice ? gasPrice * BigInt(120) / BigInt(100) : undefined // +20% gas price
       });
       
-      showNotification('info', 'Đang xử lý giao dịch... (có thể mất 30-60 giây)');
+      showNotification('info', 'Đang xử lý ... (có thể mất vài giây)');
       const receipt = await tx.wait();
 
       if (receipt.status === 1) {
@@ -181,7 +181,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess, accoun
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="VD: Cứu trợ lũ lụt miền Trung"
+                placeholder="VD: Tạo quỹ trồng cây xanh"
                 className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:bg-white/10 transition-all"
                 maxLength={100}
               />
@@ -213,7 +213,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess, accoun
                 type="number"
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
-                placeholder="VD: 1000"
+                placeholder="VD: 10000"
                 className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:bg-white/10 transition-all"
                 min="0"
                 step="0.01"
