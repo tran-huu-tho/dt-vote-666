@@ -131,14 +131,14 @@ export default function CampaignListSimple({ account, onSelectCampaign, refreshT
             ? 'Bấm nút "Tạo chiến dịch mới" để bắt đầu' 
             : 'Admin chưa tạo chiến dịch nào'}
         </p>
-        <p className="text-xs text-white/40 mt-4">
+        {/* <p className="text-xs text-white/40 mt-4">
           Contract: {CAMPAIGN_CONTRACT_ADDRESS.slice(0, 10)}...
-        </p>
+        </p> */}
         <button
           onClick={loadCampaigns}
           className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-bold"
         >
-          🔄 Tải lại
+           Tải lại
         </button>
       </div>
     );

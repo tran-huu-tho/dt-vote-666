@@ -36,6 +36,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [campaignBalance, setCampaignBalance] = useState('0');
 
   const ADMIN_ADDRESS = '0xfedbd76caeb345e2d1ddac06c442b86638b65bca';
   const isAdmin = account && account.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
@@ -47,6 +48,25 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, 5000);
   };
+
+  useEffect(() => {
+    const loadCampaignBalance = async () => {
+      if (!campaign) return;
+      
+      try {
+        const { ethers } = await import('ethers');
+        const provider = new ethers.JsonRpcProvider('https://testnet-rpc.coinex.net');
+        const contract = new ethers.Contract(CAMPAIGN_CONTRACT_ADDRESS, CAMPAIGN_CONTRACT_ABI, provider);
+        
+        const balance = await contract.campaignBalance(campaign.id);
+        setCampaignBalance(ethers.formatEther(balance));
+      } catch (error) {
+        console.error('Lỗi khi tải số dư:', error);
+      }
+    };
+
+    loadCampaignBalance();
+  }, [campaign]);
 
   const getNotificationColor = (type: NotificationType) => {
     switch (type) {
@@ -87,7 +107,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
 
       // Kiểm tra số dư
       const userBalance = await provider.getBalance(account);
-      const gasEstimate = BigInt(150000);
+      const gasEstimate = BigInt(300000);  // Tăng lên 300k
       const gasPrice = (await provider.getFeeData()).gasPrice || BigInt(0);
       const totalRequired = amountInWei + (gasEstimate * gasPrice);
 
@@ -99,7 +119,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
 
       const tx = await contract.donate(campaign.id, {
         value: amountInWei,
-        gasLimit: 150000
+        gasLimit: 300000  // Tăng gas limit lên 300k
       });
 
       showNotification('info', 'Đang xử lý giao dịch...');
@@ -108,7 +128,11 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       showNotification('success', `Quyên góp ${donationAmount} CET thành công!`);
       setDonationAmount('');
       
-      // Đợi 2 giây rồi cập nhật
+      // Cập nhật số dư ngay
+      const newBalance = parseFloat(campaignBalance) + parseFloat(donationAmount);
+      setCampaignBalance(newBalance.toString());
+      
+      // Đợi 2 giây rồi cập nhật toàn bộ
       setTimeout(() => {
         onUpdate();
       }, 2000);
@@ -123,10 +147,16 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
           errorMessage.includes('user cancelled')) {
         // User cancelled - không log error
         showNotification('warning', 'Bạn đã hủy giao dịch');
+      } else if (errorCode === 'CALL_EXCEPTION' || errorMessage.includes('execution reverted')) {
+        console.error('Lỗi khi quyên góp:', error);
+        showNotification('error', 'Giao dịch bị từ chối! Kiểm tra số dư và chiến dịch còn mở.');
+      } else if (errorMessage.includes('insufficient funds')) {
+        console.error('Lỗi khi quyên góp:', error);
+        showNotification('error', 'Không đủ CET để thực hiện giao dịch!');
       } else {
         // Lỗi thật sự - mới log ra console
         console.error('Lỗi khi quyên góp:', error);
-        showNotification('error', 'Tài khoản không đủ để thực hiện giao dịch!');
+        showNotification('error', 'Lỗi khi quyên góp! Vui lòng thử lại.');
       }
     } finally {
       setIsDonating(false);
@@ -181,8 +211,8 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
   const handleWithdraw = async () => {
     if (!campaign) return;
 
-    if (parseFloat(campaign.totalRaised) === 0) {
-      showNotification('warning', 'Không có tiền để rút!');
+    if (parseFloat(campaignBalance) === 0) {
+      showNotification('warning', 'Không có tiền để rút! (Có thể đã rút rồi)');
       return;
     }
 
@@ -199,8 +229,10 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
       const receipt = await tx.wait();
 
       const txHash = receipt.hash.slice(0, 10) + '...' + receipt.hash.slice(-8);
-      showNotification('success', `Đã rút ${campaign.totalRaised} CET thành công! TX: ${txHash}`);
+      showNotification('success', `Đã rút ${campaignBalance} CET thành công! TX: ${txHash}`);
 
+      setCampaignBalance('0');
+      
       setTimeout(() => {
         onUpdate();
       }, 2000);
@@ -226,7 +258,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
   const handleDelete = async () => {
     if (!campaign) return;
 
-    if (parseFloat(campaign.totalRaised) > 0) {
+    if (parseFloat(campaignBalance) > 0) {
       showNotification('error', 'Không thể xóa chiến dịch còn tiền! Vui lòng rút hết tiền trước.');
       return;
     }
@@ -350,8 +382,12 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
                   <h3 className="text-sm font-bold text-white/60 mb-3">Tiến độ quyên góp</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-white/70">Đã quyên góp</span>
+                      <span className="text-white/70">Tổng quyên góp</span>
                       <span className="text-green-400 font-bold text-lg">{parseFloat(campaign.totalRaised).toFixed(4)} CET</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Số dư có thể rút</span>
+                      <span className="text-yellow-400 font-bold text-lg">{parseFloat(campaignBalance).toFixed(4)} CET</span>
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
                       <div
@@ -385,22 +421,22 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
 
                     <button
                       onClick={handleWithdraw}
-                      disabled={isWithdrawing || parseFloat(campaign.totalRaised) === 0}
+                      disabled={isWithdrawing || parseFloat(campaignBalance) === 0}
                       className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isWithdrawing ? 'Đang rút...' : `Rút ${parseFloat(campaign.totalRaised).toFixed(4)} CET`}
+                      {isWithdrawing ? 'Đang rút...' : `Rút ${parseFloat(campaignBalance).toFixed(4)} CET`}
                     </button>
 
                     <button
                       onClick={handleDelete}
-                      disabled={isDeleting || parseFloat(campaign.totalRaised) > 0}
+                      disabled={isDeleting || parseFloat(campaignBalance) > 0}
                       className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isDeleting ? 'Đang xóa...' : 'Xóa chiến dịch'}
                     </button>
                     
-                    {parseFloat(campaign.totalRaised) > 0 && (
-                      <p className="text-xs text-yellow-400">
+                    {parseFloat(campaignBalance) > 0 && (
+                      <p className="text-xs text-yellow-400 text-center mt-2">
                         ⚠️ Rút hết tiền trước khi xóa chiến dịch
                       </p>
                     )}
@@ -430,7 +466,7 @@ export default function CampaignDetail({ campaign, account, onClose, onUpdate }:
                       </div>
 
                       <div className="grid grid-cols-4 gap-2">
-                        {[0.1, 0.5, 1, 5].map((amount) => (
+                        {[1, 5, 10, 20].map((amount) => (
                           <button
                             key={amount}
                             onClick={() => setDonationAmount(amount.toString())}
