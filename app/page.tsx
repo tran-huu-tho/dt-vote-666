@@ -20,6 +20,7 @@ interface Campaign {
   totalRaised: string;
   createdAt: number;
   isActive: boolean;
+  isDeleted: boolean;
   creator: string;
 }
 
